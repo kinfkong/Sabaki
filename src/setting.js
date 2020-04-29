@@ -50,6 +50,8 @@ let defaults = {
   'board.show_analysis': true,
   'board.variation_replay_mode': 'move_by_move',
   'board.variation_replay_interval': 500,
+  'game.together_mode_engine_moves': 2,
+  'game.together_mode_human_moves': 1,
   'cleanmarkup.annotations': false,
   'cleanmarkup.arrow': true,
   'cleanmarkup.circle': true,

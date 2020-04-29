@@ -1968,41 +1968,62 @@ class Sabaki extends EventEmitter {
     this.setState({
       engineTogehterWithHumanGameOngoing: true
     })
-    let oldDataString = null
-    let ourPlayCount = 0
+    let prev = null
     while (
       this.state.blackEngineTogetherSyncerId !== null ||
       this.state.whiteEngineTogetherSyncerId !== null
     ) {
-      let shouldWait = true
+      let {gameTree: tree} = this.inferredState
+      let bCount = 0
+      let wCount = 0
+      let lastNodeId = null
+      for (let node of tree.listMainNodes()) {
+        if (node.data && node.data.B) {
+          bCount++
+        }
+        if (node.data && node.data.W) {
+          wCount++
+        }
+        lastNodeId = node.id
+      }
+      if (lastNodeId == prev) {
+        await this.sleep(500)
+        continue
+      }
+      prev = lastNodeId
       let treePosition = this.state.treePosition
+      let player = this.getPlayer(treePosition)
       let syncerId =
-        this.getPlayer(treePosition) > 0
+        player > 0
           ? this.state.blackEngineTogetherSyncerId
           : this.state.whiteEngineTogetherSyncerId
 
-      let dataString = JSON.stringify(treePosition)
-      if (oldDataString === dataString) {
-        // sleep for a while for human inputs
-        await this.sleep(200)
-        continue
-      }
-
-      oldDataString = dataString
       if (syncerId !== null) {
         // my turn, use human or engine
-        ourPlayCount++
-        if (ourPlayCount % 3 !== 0) {
-          shouldWait = false
+        let useEngine = true
+        let count = player > 0 ? bCount : wCount
+        let engineMoves = parseInt(
+          setting.get('game.together_mode_engine_moves') + ''
+        )
+        let humanMoves = parseInt(
+          setting.get('game.together_mode_human_moves') + ''
+        )
+
+        let totalMoves = engineMoves + humanMoves
+        if (totalMoves === 0) {
+          totalMoves = 1
+          engineMoves = 1
+        }
+        let ind = count % (engineMoves + humanMoves)
+        if (ind >= engineMoves) {
+          useEngine = false
+        }
+        if (useEngine) {
           let move = await this.generateMove(syncerId, treePosition)
           if (move == null || move.resign) {
             break
           }
         }
-      }
-      if (shouldWait) {
-        // sleep for a while for human inputs
-        await this.sleep(200)
       }
     }
     this.setState({

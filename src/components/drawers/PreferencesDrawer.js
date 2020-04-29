@@ -67,7 +67,9 @@ class GeneralTab extends Component {
 
     this.state = {
       appLang: setting.get('app.lang'),
-      variationReplayMode: setting.get('board.variation_replay_mode')
+      variationReplayMode: setting.get('board.variation_replay_mode'),
+      togetherModeEngineMoves: setting.get('game.together_mode_engine_moves'),
+      togetherModeHumanMoves: setting.get('game.together_mode_human_moves')
     }
 
     this.handleSoundEnabledChange = evt => {
@@ -82,6 +84,12 @@ class GeneralTab extends Component {
       setting.set('graph.node_size', graphNodeSize)
     }
 
+    this.handleTogetherModeEngineMovesChange = evt => {
+      setting.set('game.together_mode_engine_moves', evt.currentTarget.value)
+    }
+    this.handleTogetherModeHumanMovesChange = evt => {
+      setting.set('game.together_mode_human_moves', evt.currentTarget.value)
+    }
     this.handleLanguageChange = evt => {
       setting.set('app.lang', evt.currentTarget.value)
 
@@ -262,6 +270,102 @@ class GeneralTab extends Component {
                   selected: graphGridSize > 22
                 },
                 t('Big')
+              )
+            )
+          )
+        ),
+        h(
+          'li',
+          {class: 'select'},
+          h(
+            'label',
+            {},
+            t('Together Mode - Engine Moves:'),
+            ' ',
+
+            h(
+              'select',
+              {onChange: this.handleTogetherModeEngineMovesChange},
+
+              h(
+                'option',
+                {
+                  value: 0,
+                  selected: this.state.togetherModeEngineMoves === 0
+                },
+                '0'
+              ),
+              h(
+                'option',
+                {
+                  value: 1,
+                  selected: this.state.togetherModeEngineMoves === 1
+                },
+                '1'
+              ),
+              h(
+                'option',
+                {
+                  value: 2,
+                  selected: this.state.togetherModeEngineMoves === 2
+                },
+                '2'
+              ),
+              h(
+                'option',
+                {
+                  value: 3,
+                  selected: this.state.togetherModeEngineMoves === 3
+                },
+                '3'
+              )
+            )
+          )
+        ),
+        h(
+          'li',
+          {class: 'select'},
+          h(
+            'label',
+            {},
+            t('Together Mode - Human Moves:'),
+            ' ',
+
+            h(
+              'select',
+              {onChange: this.handleTogetherModeHumanMovesChange},
+
+              h(
+                'option',
+                {
+                  value: 0,
+                  selected: this.state.togetherModeHumanMoves === 0
+                },
+                '0'
+              ),
+              h(
+                'option',
+                {
+                  value: 1,
+                  selected: this.state.togetherModeHumanMoves === 1
+                },
+                '1'
+              ),
+              h(
+                'option',
+                {
+                  value: 2,
+                  selected: this.state.togetherModeHumanMoves === 2
+                },
+                '2'
+              ),
+              h(
+                'option',
+                {
+                  value: 3,
+                  selected: this.state.togetherModeHumanMoves === 3
+                },
+                '3'
               )
             )
           )
