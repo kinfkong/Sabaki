@@ -89,7 +89,10 @@ class Sabaki extends EventEmitter {
       analyzingEngineSyncerId: null,
       blackEngineSyncerId: null,
       whiteEngineSyncerId: null,
+      blackEngineTogetherSyncerId: null,
+      whiteEngineTogetherSyncerId: null,
       engineGameOngoing: null,
+      engineTogehterWithHumanGameOngoing: null,
       analysisTreePosition: null,
       analysis: null,
 
@@ -1954,6 +1957,59 @@ class Sabaki extends EventEmitter {
     }
   }
 
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  async runningEngineHumanTogetherGame() {
+    if (this.state.engineTogehterWithHumanGameOngoing) {
+      return
+    }
+    this.setState({
+      engineTogehterWithHumanGameOngoing: true
+    })
+    let oldDataString = null
+    let ourPlayCount = 0
+    while (
+      this.state.blackEngineTogetherSyncerId !== null ||
+      this.state.whiteEngineTogetherSyncerId !== null
+    ) {
+      let shouldWait = true
+      let treePosition = this.state.treePosition
+      let syncerId =
+        this.getPlayer(treePosition) > 0
+          ? this.state.blackEngineTogetherSyncerId
+          : this.state.whiteEngineTogetherSyncerId
+
+      let dataString = JSON.stringify(treePosition)
+      if (oldDataString === dataString) {
+        // sleep for a while for human inputs
+        await this.sleep(200)
+        continue
+      }
+
+      oldDataString = dataString
+      if (syncerId !== null) {
+        // my turn, use human or engine
+        ourPlayCount++
+        if (ourPlayCount % 3 !== 0) {
+          shouldWait = false
+          let move = await this.generateMove(syncerId, treePosition)
+          if (move == null || move.resign) {
+            break
+          }
+        }
+      }
+      if (shouldWait) {
+        // sleep for a while for human inputs
+        await this.sleep(200)
+      }
+    }
+    this.setState({
+      engineTogehterWithHumanGameOngoing: false
+    })
+  }
+
   async startEngineGame(treePosition) {
     let t = i18n.context('sabaki.engine')
     let {engineGameOngoing, attachedEngineSyncers} = this.state
@@ -2868,6 +2924,32 @@ class Sabaki extends EventEmitter {
             }))
           }
         },
+
+        {
+          label: t('Set as &Black Player With &Human Together'),
+          type: 'checkbox',
+          checked: this.state.blackEngineTogetherSyncerId === syncerId,
+          click: () => {
+            this.setState(state => ({
+              blackEngineTogetherSyncerId:
+                state.blackEngineTogetherSyncerId === syncerId ? null : syncerId
+            }))
+            this.runningEngineHumanTogetherGame()
+          }
+        },
+        {
+          label: t('Set as &White Player With &Human Together'),
+          type: 'checkbox',
+          checked: this.state.whiteEngineTogetherSyncerId === syncerId,
+          click: () => {
+            this.setState(state => ({
+              whiteEngineTogetherSyncerId:
+                state.whiteEngineTogetherSyncerId === syncerId ? null : syncerId
+            }))
+            this.(syncerId)
+          }
+        },
+
         {type: 'separator'},
         {
           label: t('&Go to Engine'),
