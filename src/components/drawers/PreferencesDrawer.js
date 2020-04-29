@@ -68,8 +68,12 @@ class GeneralTab extends Component {
     this.state = {
       appLang: setting.get('app.lang'),
       variationReplayMode: setting.get('board.variation_replay_mode'),
-      togetherModeEngineMoves: setting.get('game.together_mode_engine_moves'),
-      togetherModeHumanMoves: setting.get('game.together_mode_human_moves')
+      togetherModeEngineMoves: parseInt(
+        setting.get('game.together_mode_engine_moves') + ''
+      ),
+      togetherModeHumanMoves: parseInt(
+        setting.get('game.together_mode_human_moves') + ''
+      )
     }
 
     this.handleSoundEnabledChange = evt => {

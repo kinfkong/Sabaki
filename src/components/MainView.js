@@ -176,8 +176,10 @@ export default class MainView extends Component {
         h(PlayBar, {
           mode,
           engineSyncers: [
-            this.props.blackEngineSyncerId,
-            this.props.whiteEngineSyncerId
+            this.props.blackEngineSyncerId ||
+              this.props.blackEngineTogetherSyncerId,
+            this.props.whiteEngineSyncerId ||
+              this.props.whiteEngineTogetherSyncerId
           ].map(id =>
             this.props.attachedEngineSyncers.find(syncer => syncer.id === id)
           ),
