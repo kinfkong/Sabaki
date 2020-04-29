@@ -2946,7 +2946,7 @@ class Sabaki extends EventEmitter {
               whiteEngineTogetherSyncerId:
                 state.whiteEngineTogetherSyncerId === syncerId ? null : syncerId
             }))
-            this.(syncerId)
+            this.runningEngineHumanTogetherGame()
           }
         },
 
