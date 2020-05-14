@@ -44,10 +44,10 @@ function parseAnalysis(line, board, sign) {
       for (let j = 0; j < board.width; j++) {
         let d = i * board.width + j
         let v = 0
-        if (ownerships[d] < -0.5) {
+        if (ownerships[d] < -0.2) {
           v = -1
         }
-        if (ownerships[d] > 0.5) {
+        if (ownerships[d] > 0.2) {
           v = 1
         }
         row.push(v * sign)

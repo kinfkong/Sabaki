@@ -75,7 +75,7 @@ export default class DrawerManager extends Component {
     scoringMethod,
     scoreBoard,
     areaMap,
-
+    showOwnerships,
     engines,
     graphGridSize,
     preferencesTab

@@ -1981,7 +1981,18 @@ class Sabaki extends EventEmitter {
       pass
     }
   }
+  async stopAnalyzeOwnership() {
+    let syncer = this.inferredState.analyzingOwnershipEngineSyncer
 
+    if (syncer != null) {
+      syncer.sendAbort()
+    }
+    this.setState({
+      ownerships: null,
+      analyzingEngineSyncerId: null,
+      showOwnerships: false
+    })
+  }
   async analyzeOwnership(syncerId, treePosition) {
     let t = i18n.context('sabaki.engine')
     let sign = this.getPlayer(treePosition)

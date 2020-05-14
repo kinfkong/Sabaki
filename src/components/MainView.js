@@ -123,7 +123,9 @@ export default class MainView extends Component {
         paintMap[y][x] = 1
       }
     }
-
+    if (showOwnerships) {
+      mode = 'estimator'
+    }
     return h(
       'section',
       {id: 'main'},
@@ -222,14 +224,13 @@ export default class MainView extends Component {
 
         h(ScoringBar, {
           type: 'estimator',
-          mode,
+          mode: mode,
           method: scoringMethod,
           scoreBoard,
           areaMap,
           komi,
           handicap
         }),
-
         h(FindBar, {
           mode,
           findText,

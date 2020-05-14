@@ -319,6 +319,7 @@ class App extends Component {
           ? influence.map(scoreBoard.signMap, {discrete: true})
           : influence.areaMap(scoreBoard.signMap)
     } else if (sabaki.state.ownerships && sabaki.state.ownerships) {
+      scoreBoard = gametree.getBoard(tree, state.treePosition).clone()
       areaMap = sabaki.state.ownerships
     }
 
