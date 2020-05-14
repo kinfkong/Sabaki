@@ -74,6 +74,7 @@ export default class LeftSidebar extends Component {
     {
       attachedEngineSyncers,
       analyzingEngineSyncerId,
+      analyzingOwnershipEngineSyncerId,
       blackEngineSyncerId,
       whiteEngineSyncerId,
       engineGameOngoing,
@@ -97,6 +98,7 @@ export default class LeftSidebar extends Component {
         sideContent: h(EnginePeerList, {
           attachedEngineSyncers,
           analyzingEngineSyncerId,
+          analyzingOwnershipEngineSyncerId,
           blackEngineSyncerId,
           whiteEngineSyncerId,
           selectedEngineSyncerId,

@@ -318,6 +318,8 @@ class App extends Component {
         state.mode === 'estimator'
           ? influence.map(scoreBoard.signMap, {discrete: true})
           : influence.areaMap(scoreBoard.signMap)
+    } else if (sabaki.state.ownerships && sabaki.state.ownerships) {
+      areaMap = sabaki.state.ownerships
     }
 
     state = {...state, ...inferredState, scoreBoard, areaMap}
@@ -338,6 +340,7 @@ class App extends Component {
         disableAll: state.busy > 0,
         analysisType: state.analysisType,
         showAnalysis: state.showAnalysis,
+        showOwnerships: state.showOwnerships,
         showCoordinates: state.showCoordinates,
         coordinatesType: state.coordinatesType,
         showMoveNumbers: state.showMoveNumbers,

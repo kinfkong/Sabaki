@@ -61,6 +61,7 @@ class Sabaki extends EventEmitter {
       analysisType: null,
       coordinatesType: null,
       showAnalysis: null,
+      showOwnerships: null,
       showCoordinates: null,
       showMoveColorization: null,
       showMoveNumbers: null,
@@ -87,6 +88,7 @@ class Sabaki extends EventEmitter {
       engines: null,
       attachedEngineSyncers: [],
       analyzingEngineSyncerId: null,
+      analyzingOwnershipEngineSyncerId: null,
       blackEngineSyncerId: null,
       whiteEngineSyncerId: null,
       blackEngineTogetherSyncerId: null,
@@ -95,6 +97,7 @@ class Sabaki extends EventEmitter {
       engineTogehterWithHumanGameOngoing: null,
       analysisTreePosition: null,
       analysis: null,
+      ownerships: null,
 
       // Drawers
 
@@ -194,6 +197,11 @@ class Sabaki extends EventEmitter {
       get analyzingEngineSyncer() {
         return state.attachedEngineSyncers.find(
           syncer => syncer.id === state.analyzingEngineSyncerId
+        )
+      },
+      get analyzingOwnershipEngineSyncer() {
+        return state.attachedEngineSyncers.find(
+          syncer => syncer.id === state.analyzingOwnershipEngineSyncerId
         )
       },
       get winrateData() {
@@ -1424,8 +1432,13 @@ class Sabaki extends EventEmitter {
     // Continuous analysis
 
     let syncer = this.inferredState.analyzingEngineSyncer
-
-    if (
+    let ownershipSyncer = this.inferredState.analyzingOwnershipEngineSyncer
+    if (ownershipSyncer != null && navigated && this.state.showOwnerships) {
+      clearTimeout(this.continuousAnalysisId)
+      this.continuousAnalysisId = setTimeout(() => {
+        this.analyzeOwnership(ownershipSyncer.id, treePosition)
+      }, setting.get('game.navigation_analysis_delay'))
+    } else if (
       syncer != null &&
       navigated &&
       (this.state.engineGameOngoing == null ||
@@ -1684,6 +1697,15 @@ class Sabaki extends EventEmitter {
       let syncer = new EngineSyncer(engine)
 
       syncer.on('analysis-update', () => {
+        if (
+          this.state.analyzingOwnershipEngineSyncerId === syncer.id &&
+          syncer.analysis &&
+          syncer.analysis.ownerships
+        ) {
+          this.setState({
+            ownerships: syncer.analysis.ownerships
+          })
+        }
         if (this.state.analyzingEngineSyncerId === syncer.id) {
           // Update analysis info
 
@@ -1815,7 +1837,10 @@ class Sabaki extends EventEmitter {
               : state.engineGameOngoing,
           blackEngineSyncerId: unset(state.blackEngineSyncerId),
           whiteEngineSyncerId: unset(state.whiteEngineSyncerId),
-          analyzingEngineSyncerId: unset(state.analyzingEngineSyncerId)
+          analyzingEngineSyncerId: unset(state.analyzingEngineSyncerId),
+          analyzingOwnershipEngineSyncerId: unset(
+            state.analyzingOwnershipEngineSyncerId
+          )
         }))
       })
     )
@@ -1954,6 +1979,45 @@ class Sabaki extends EventEmitter {
       treePosition: newTreePosition,
       resign,
       pass
+    }
+  }
+
+  async analyzeOwnership(syncerId, treePosition) {
+    let t = i18n.context('sabaki.engine')
+    let sign = this.getPlayer(treePosition)
+    let color = sign > 0 ? 'B' : 'W'
+    let syncer = this.state.attachedEngineSyncers.find(
+      syncer => syncer.id === syncerId
+    )
+    if (syncer == null) return
+
+    let synced = await this.syncEngine(syncerId, treePosition)
+    if (!synced) return
+
+    let commandName = setting
+      .get('engines.analyze_ownership_commands')
+      .find(x => syncer.commands.includes(x))
+    if (!commandName) {
+      throw new Error()
+    }
+
+    let interval = setting.get('board.analysis_interval').toString()
+
+    try {
+      syncer.queueCommand({
+        name: commandName,
+        args: [color, interval, 'ownership', true]
+      })
+      this.setState({
+        showOwnerships: true
+      })
+    } catch (err) {
+      dialog.showMessageBox(
+        t(p => `${p.engine} has failed to analyze ownership.`, {
+          engine: syncer.engine.name
+        }),
+        'error'
+      )
     }
   }
 
@@ -2921,6 +2985,19 @@ class Sabaki extends EventEmitter {
             } else {
               this.startAnalysis(syncerId)
             }
+          }
+        },
+        {
+          label: t('Set as Ownership &Analyzer'),
+          type: 'checkbox',
+          checked: this.state.analyzingOwnershipEngineSyncerId === syncerId,
+          click: () => {
+            this.setState(state => ({
+              analyzingOwnershipEngineSyncerId:
+                state.analyzingOwnershipEngineSyncerId === syncerId
+                  ? null
+                  : syncerId
+            }))
           }
         },
         {

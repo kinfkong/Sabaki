@@ -120,6 +120,7 @@ let defaults = {
   'edit.show_removeothervariations_warning': true,
   'engines.list': [],
   'engines.analyze_commands': ['analyze', 'kata-analyze', 'lz-analyze'],
+  'engines.analyze_ownership_commands': ['kata-analyze'],
   'engines.gemove_analyze_commands': [
     'genmove_analyze',
     'kata-genmove_analyze',

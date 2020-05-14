@@ -507,6 +507,25 @@ exports.get = function(props = {}) {
 
             sabaki.generateMove(syncerId, sabaki.state.treePosition)
           }
+        },
+        {
+          label: i18n.t('menu.engines', 'Analyze &Ownership'),
+          accelerator: 'F7',
+          enabled: !engineGameOngoing,
+          click: () => {
+            let syncerId = sabaki.state.analyzingOwnershipEngineSyncerId
+            if (syncerId == null) {
+              dialog.showMessageBox(
+                i18n.t(
+                  'menu.engines',
+                  'Please assign an engine to the analyze ownership first.'
+                ),
+                'info'
+              )
+            }
+
+            sabaki.analyzeOwnership(syncerId, sabaki.state.treePosition)
+          }
         }
       ]
     },

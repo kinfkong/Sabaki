@@ -29,8 +29,35 @@ function parseVertex(coord, size) {
   return [x, y]
 }
 
-function parseAnalysis(line, board) {
-  return line
+function parseAnalysis(line, board, sign) {
+  const infos = line.split(/\s*ownership\s+/)
+  let ownerships = null
+  if (infos.length >= 2) {
+    line = infos[0]
+    ownerships = infos[1]
+      .split(/\s+/)
+      .filter(x => x.trim().length > 0)
+      .map(x => parseFloat(x))
+    let areaMap = []
+    for (let i = 0; i < board.height; i++) {
+      let row = []
+      for (let j = 0; j < board.width; j++) {
+        let d = i * board.width + j
+        let v = 0
+        if (ownerships[d] < -0.5) {
+          v = -1
+        }
+        if (ownerships[d] > 0.5) {
+          v = 1
+        }
+        row.push(v * sign)
+      }
+      areaMap.push(row)
+    }
+    ownerships = areaMap
+  }
+
+  const variations = line
     .split(/\s*info\s+/)
     .slice(1)
     .map(x => x.trim())
@@ -71,6 +98,11 @@ function parseAnalysis(line, board) {
       scoreLead: scoreLead != null ? +scoreLead : null,
       moves: pv.map(x => board.parseVertex(x))
     }))
+
+  return {
+    variations,
+    ownerships
+  }
 }
 
 export default class EngineSyncer extends EventEmitter {
@@ -140,11 +172,12 @@ export default class EngineSyncer extends EventEmitter {
             // Parse analysis info
 
             if (line.startsWith('info ')) {
-              let variations = parseAnalysis(line, board)
+              let {variations, ownerships} = parseAnalysis(line, board, sign)
 
               this.analysis = {
                 sign,
                 variations,
+                ownerships,
                 winrate: Math.max(...variations.map(({winrate}) => winrate))
               }
             } else if (line.startsWith('play ')) {

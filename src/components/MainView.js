@@ -92,6 +92,7 @@ export default class MainView extends Component {
       highlightVertices,
       analysisType,
       showAnalysis,
+      showOwnerships,
       showCoordinates,
       showMoveColorization,
       showMoveNumbers,
@@ -113,7 +114,7 @@ export default class MainView extends Component {
     let handicap = +gametree.getRootProperty(gameTree, 'HA', 0)
     let paintMap
 
-    if (['scoring', 'estimator'].includes(mode)) {
+    if (['scoring', 'estimator'].includes(mode) || showOwnerships) {
       paintMap = areaMap
     } else if (mode === 'guess') {
       paintMap = [...Array(board.height)].map(_ => Array(board.width).fill(0))
