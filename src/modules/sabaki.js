@@ -89,6 +89,7 @@ class Sabaki extends EventEmitter {
       attachedEngineSyncers: [],
       analyzingEngineSyncerId: null,
       analyzingOwnershipEngineSyncerId: null,
+      analyzingProblemEngineSyncerId: null,
       blackEngineSyncerId: null,
       whiteEngineSyncerId: null,
       blackEngineTogetherSyncerId: null,
@@ -202,6 +203,11 @@ class Sabaki extends EventEmitter {
       get analyzingOwnershipEngineSyncer() {
         return state.attachedEngineSyncers.find(
           syncer => syncer.id === state.analyzingOwnershipEngineSyncerId
+        )
+      },
+      get analyzingProblemEngineSyncer() {
+        return state.attachedEngineSyncers.find(
+          syncer => syncer.id === state.analyzingProblemEngineSyncerId
         )
       },
       get winrateData() {
@@ -1433,10 +1439,16 @@ class Sabaki extends EventEmitter {
 
     let syncer = this.inferredState.analyzingEngineSyncer
     let ownershipSyncer = this.inferredState.analyzingOwnershipEngineSyncer
+    let problemSyncer = this.inferredState.analyzingProblemEngineSyncer
     if (ownershipSyncer != null && navigated && this.state.showOwnerships) {
       clearTimeout(this.continuousAnalysisId)
       this.continuousAnalysisId = setTimeout(() => {
         this.analyzeOwnership(ownershipSyncer.id, treePosition)
+      }, setting.get('game.navigation_analysis_delay'))
+    } else if (problemSyncer != null && navigated) {
+      clearTimeout(this.continuousAnalysisId)
+      this.continuousAnalysisId = setTimeout(() => {
+        this.analyzeProblem(problemSyncer.id, treePosition)
       }, setting.get('game.navigation_analysis_delay'))
     } else if (
       syncer != null &&
@@ -1706,9 +1718,11 @@ class Sabaki extends EventEmitter {
             ownerships: syncer.analysis.ownerships
           })
         }
-        if (this.state.analyzingEngineSyncerId === syncer.id) {
+        if (
+          this.state.analyzingEngineSyncerId === syncer.id ||
+          this.state.analyzingProblemEngineSyncerId === syncer.id
+        ) {
           // Update analysis info
-
           this.setState({
             analysis: syncer.analysis,
             analysisTreePosition: syncer.treePosition
@@ -1840,6 +1854,9 @@ class Sabaki extends EventEmitter {
           analyzingEngineSyncerId: unset(state.analyzingEngineSyncerId),
           analyzingOwnershipEngineSyncerId: unset(
             state.analyzingOwnershipEngineSyncerId
+          ),
+          analyzingProblemEngineSyncerId: unset(
+            state.analyzingProblemEngineSyncerId
           )
         }))
       })
@@ -2025,6 +2042,58 @@ class Sabaki extends EventEmitter {
     } catch (err) {
       dialog.showMessageBox(
         t(p => `${p.engine} has failed to analyze ownership.`, {
+          engine: syncer.engine.name
+        }),
+        'error'
+      )
+    }
+  }
+  async analyzeProblem(syncerId, treePosition, color) {
+    let t = i18n.context('sabaki.engine')
+    if (!color) {
+      let sign = this.getPlayer(treePosition)
+      color = sign > 0 ? 'B' : 'W'
+    }
+    let syncer = this.state.attachedEngineSyncers.find(
+      syncer => syncer.id === syncerId
+    )
+    if (syncer == null) return
+
+    let synced = await this.syncEngine(syncerId, treePosition)
+    if (!synced) return
+
+    let commandName = setting
+      .get('engines.analyze_problem_commands')
+      .find(x => syncer.commands.includes(x))
+    if (!commandName) {
+      throw new Error()
+    }
+
+    let interval = setting.get('board.analysis_interval').toString()
+
+    try {
+      let args = [color, interval]
+      let problemArea = await this.detectProblemArea(treePosition)
+      if (problemArea) {
+        args = [
+          color,
+          interval,
+          'topleft',
+          problemArea.topleft,
+          'bottomright',
+          problemArea.bottomright
+        ]
+      }
+      syncer.queueCommand({
+        name: commandName,
+        args
+      })
+      this.setState({
+        showOwnerships: true
+      })
+    } catch (err) {
+      dialog.showMessageBox(
+        t(p => `${p.engine} has failed to analyze problem.`, {
           engine: syncer.engine.name
         }),
         'error'
@@ -2369,6 +2438,68 @@ class Sabaki extends EventEmitter {
       : data.B != null || (data.HA != null && +data.HA[0] >= 1)
       ? -1
       : 1
+  }
+
+  async detectProblemArea(treePosition) {
+    let {size} = this.inferredState.gameInfo
+    if (size[0] !== 19) {
+      // full board
+      return null
+    }
+    const board = this.inferredState.board
+    const signMap = board.signMap
+    let minI = -1
+    let maxI = -1
+    let minJ = -1
+    let maxJ = -1
+    for (let i = 0; i < signMap.length; i++) {
+      for (let j = 0; j < signMap[i].length; j++) {
+        if (signMap[i][j] !== 0) {
+          if (i < minI || minI < 0) {
+            minI = i
+          }
+          if (i > maxI || maxI < 0) {
+            maxI = i
+          }
+          if (j < minJ || minJ < 0) {
+            minJ = j
+          }
+          if (j > maxJ || maxJ < 0) {
+            maxJ = j
+          }
+        }
+      }
+    }
+    if (minI < 0) {
+      // no chess
+      return null
+    }
+    if (minI - 3 <= 0) {
+      minI = 0
+    } else {
+      minI -= 1
+    }
+    if (minJ - 3 <= 0) {
+      minJ = 0
+    } else {
+      minJ -= 1
+    }
+    if (maxI + 3 >= size[0] - 1) {
+      maxI = size[0] - 1
+    } else {
+      maxI += 1
+    }
+    if (maxJ + 3 >= size[0] - 1) {
+      maxJ = size[0] - 1
+    } else {
+      maxJ += 1
+    }
+    const tl = board.stringifyVertex([minJ, minI])
+    const br = board.stringifyVertex([maxJ, maxI])
+    return {
+      topleft: tl,
+      bottomright: br
+    }
   }
 
   setPlayer(treePosition, sign) {
@@ -3011,6 +3142,20 @@ class Sabaki extends EventEmitter {
             }))
           }
         },
+        {
+          label: t('Set as Problem &Analyzer'),
+          type: 'checkbox',
+          checked: this.state.analyzingProblemEngineSyncerId === syncerId,
+          click: () => {
+            this.setState(state => ({
+              analyzingProblemEngineSyncerId:
+                state.analyzingProblemEngineSyncerId === syncerId
+                  ? null
+                  : syncerId
+            }))
+          }
+        },
+
         {
           label: t('Set as &Black Player'),
           type: 'checkbox',

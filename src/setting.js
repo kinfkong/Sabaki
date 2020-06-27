@@ -121,6 +121,7 @@ let defaults = {
   'engines.list': [],
   'engines.analyze_commands': ['analyze', 'kata-analyze', 'lz-analyze'],
   'engines.analyze_ownership_commands': ['kata-analyze'],
+  'engines.analyze_problem_commands': ['kata-problem_analyze'],
   'engines.gemove_analyze_commands': [
     'genmove_analyze',
     'kata-genmove_analyze',

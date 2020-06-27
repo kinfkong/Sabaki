@@ -526,6 +526,43 @@ exports.get = function(props = {}) {
 
             sabaki.analyzeOwnership(syncerId, sabaki.state.treePosition)
           }
+        },
+        {
+          label: i18n.t('menu.engines', 'Analyze &Problem (Black First)'),
+          accelerator: 'F9',
+          enabled: !engineGameOngoing,
+          click: () => {
+            let syncerId = sabaki.state.analyzingProblemEngineSyncerId
+            if (syncerId == null) {
+              dialog.showMessageBox(
+                i18n.t(
+                  'menu.engines',
+                  'Please assign an engine to the analyze problem first.'
+                ),
+                'info'
+              )
+            }
+
+            sabaki.analyzeProblem(syncerId, sabaki.state.treePosition, 'B')
+          }
+        },
+        {
+          label: i18n.t('menu.engines', 'Analyze &Problem (White First)'),
+          accelerator: 'F10',
+          enabled: !engineGameOngoing,
+          click: () => {
+            let syncerId = sabaki.state.analyzingProblemEngineSyncerId
+            if (syncerId == null) {
+              dialog.showMessageBox(
+                i18n.t(
+                  'menu.engines',
+                  'Please assign an engine to the analyze problem first.'
+                ),
+                'info'
+              )
+            }
+            sabaki.analyzeProblem(syncerId, sabaki.state.treePosition, 'W')
+          }
         }
       ]
     },

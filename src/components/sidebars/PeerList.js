@@ -164,6 +164,7 @@ export class EnginePeerList extends Component {
     whiteEngineSyncerId,
     analyzingEngineSyncerId,
     analyzingOwnershipEngineSyncerId,
+    analyzingProblemEngineSyncerId,
     engineGameOngoing
   }) {
     return h(
@@ -203,6 +204,7 @@ export class EnginePeerList extends Component {
             syncer,
             analyzing: syncer.id === analyzingEngineSyncerId,
             analyzeOwnership: syncer.id === analyzingOwnershipEngineSyncerId,
+            analyzeProblem: syncer.id === analyzingProblemEngineSyncerId,
             selected: syncer.id === selectedEngineSyncerId,
             blackPlayer: syncer.id === blackEngineSyncerId,
             whitePlayer: syncer.id === whiteEngineSyncerId,
