@@ -2053,6 +2053,13 @@ class Sabaki extends EventEmitter {
     if (!color) {
       let sign = this.getPlayer(treePosition)
       color = sign > 0 ? 'B' : 'W'
+    } else {
+      let sign = this.getPlayer(treePosition)
+      let currentColor = sign > 0 ? 'B' : 'W'
+      if (currentColor !== color) {
+        // make a pass
+        this.makeMove([-1, -1])
+      }
     }
     let syncer = this.state.attachedEngineSyncers.find(
       syncer => syncer.id === syncerId
